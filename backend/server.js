@@ -1,5 +1,4 @@
-// top pe add karo
-require('dotenv').config();
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
@@ -8,24 +7,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Postgres connection using DATABASE_URL from .env (Render DB)
+// PostgreSQL connection (Render external DB)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false } // Render PostgreSQL needs SSL
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-// OPTIONAL: test connection once on server start
+// Test DB connection
 async function testDb() {
   try {
-    await pool.query('SELECT 1');
-    console.log("✅ Connected to Postgres");
+    await pool.query("SELECT 1");
+    console.log("✅ Connected to Postgres (Render)");
   } catch (err) {
-    console.error("❌ Postgres connection error:", err.message || err);
+    console.error("❌ Postgres Error:", err);
   }
 }
 
+// API endpoint
 app.post("/waitlist", async (req, res) => {
   const { name, email } = req.body;
+
   try {
     await pool.query(
       "INSERT INTO waitlist(name, email) VALUES ($1, $2)",
@@ -38,9 +41,9 @@ app.post("/waitlist", async (req, res) => {
   }
 });
 
-// Use process.env.PORT so Render can set port
+// Web server (Render sets PORT automatically)
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  await testDb(); // run connection test when server starts
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  testDb();
 });
